@@ -8,17 +8,21 @@ window.geometry('600x700')
 
 top_frame = tk.Frame(window)
 top_frame.grid(row=0, sticky=tk.EW)
-center_frame = tk.Frame(window, width=100, height=500, highlightbackground="black", highlightthickness=2)
+
+center_frame = tk.Frame(window)
 center_frame.grid(row=1, sticky=tk.EW, pady=2, padx=3)
-center_frame_canvas = tk.Canvas(center_frame, width=100, height=500)
+
+center_frame_canvas = tk.Canvas(center_frame, width=500, height=500, highlightbackground="black", highlightthickness=2, scrollregion=(0,0,500,500))
 center_frame_canvas.grid(sticky=tk.NE)
 
+
 '''
-y_scrollbar = tk.Scrollbar(center_frame, command=center_frame_canvas.yview)
-y_scrollbar.grid(row=0, column=1, sticky=tk.NS)
-center_frame_canvas.configure(yscrollcommand=y_scrollbar.set)
-center_frame_canvas.configure(scrollregion=center_frame_canvas.bbox("all"))
+v_bar = tk.Scrollbar(center_frame_canvas)
+v_bar.grid(sticky=tk.N)
+v_bar.config(command=center_frame_canvas.yview)
+center_frame_canvas.config(yscrollcommand=v_bar.set)
 '''
+
 
 def generate_content():
     # open the file of text
