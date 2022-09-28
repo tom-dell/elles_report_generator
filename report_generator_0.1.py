@@ -15,6 +15,8 @@ center_frame.grid(row=1, sticky=tk.EW, pady=2, padx=3)
 center_frame_canvas = tk.Canvas(center_frame, width=500, height=500, highlightbackground="black", highlightthickness=2, scrollregion=(0,0,500,500))
 center_frame_canvas.grid(sticky=tk.NE)
 
+bottom_frame = tk.Frame(window)
+bottom_frame.grid(row=2, sticky=tk.EW)
 
 '''
 v_bar = tk.Scrollbar(center_frame_canvas)
@@ -62,6 +64,18 @@ def make_checkboxes():
         checkbox_lst.append(checkbox)
         i += 1
 
+def get_checkbox_state():
+    # create + open a txt file
+    with open(str(name_entry.get() + "_report.txt"), "w+") as report:
+        # x is the number of the checkbox, int_var is the name of the checkbox?, and int_var.get returns 0 or 1 depending on if it's checked
+        for x, int_var in enumerate(var_lst):
+            # if int_var is true
+            if int_var.get():
+                # then write the the corresponding item in the text_lst list to the txt file
+                report.writelines(text_lst[x])
+    # do I need this?
+    report.close()
+
 def clear_checkboxes():
     for checkbox in checkbox_lst:
         checkbox.destroy()
@@ -106,11 +120,14 @@ spacer2 = tk.Label(top_frame, text="")
 spacer2.grid(row=0, column=2, pady=2, padx=10, rowspan=2)
 
 # the submit button, which runs the descriptions function
-button = tk.Button(top_frame, text="Submit", command=generate_content)
-button.grid(row=0, column=3, pady=2, padx=2, rowspan=2)
+button = tk.Button(top_frame, text="Generate", command=generate_content)
+button.grid(row=0, column=3, pady=2, padx=2, columnspan=2)
 
 # the clear button, which runs the clear_checkboxes function
 button = tk.Button(top_frame, text="Clear", command=clear_checkboxes)
-button.grid(row=0, column=4, pady=2, padx=2, rowspan=2)
+button.grid(row=1, column=3, pady=2, padx=2, columnspan=2)
+
+button = tk.Button(bottom_frame, text="Save/Export", command=get_checkbox_state)
+button.grid()
 
 window.mainloop()

@@ -1,5 +1,0 @@
-pronoun = "he"
-po_pronoun = "his"
-
-print("X is observant and in tune with the needs of " + pronoun + " friends and people around them and responds with a caring nature.")
-print("X is very imaginative which have allowed" + po_pronoun + "his play and learning to be very meaningful and enjoyable to him.")
