@@ -1,22 +1,27 @@
+from cProfile import label
 from cgitb import text
 from curses.textpad import Textbox
+from textwrap import wrap
 import tkinter as tk
-import os
 
 window = tk.Tk()
 window.geometry('600x700')
+window.wm_title("Ellesha Murphey's Report Generator")
+windowWidth = window.winfo_reqwidth()
+windowHeight = window.winfo_reqheight()
+positionRight = int(window.winfo_screenwidth()/2 - windowWidth/2)
+positionDown = int(window.winfo_screenheight()/3 - windowHeight/2)
+window.geometry("+{}+{}".format(positionRight, positionDown))
 
 top_frame = tk.Frame(window)
 top_frame.grid(row=0, sticky=tk.EW)
-
 center_frame = tk.Frame(window)
 center_frame.grid(row=1, sticky=tk.EW, pady=2, padx=3)
-
 center_frame_canvas = tk.Canvas(center_frame, width=500, height=500, highlightbackground="black", highlightthickness=2, scrollregion=(0,0,500,500))
 center_frame_canvas.grid(sticky=tk.NE)
-
 bottom_frame = tk.Frame(window)
 bottom_frame.grid(row=2, sticky=tk.EW)
+
 
 '''
 v_bar = tk.Scrollbar(center_frame_canvas)
@@ -64,7 +69,14 @@ def make_checkboxes():
         checkbox_lst.append(checkbox)
         i += 1
 
-def get_checkbox_state():
+def clear_checkboxes():
+    for checkbox in checkbox_lst:
+        checkbox.destroy()
+    checkbox_lst.clear()
+    text_lst.clear()
+    var_lst.clear()
+
+def write_to_file():
     # create + open a txt file
     with open(str(name_entry.get() + "_report.txt"), "w+") as report:
         # x is the number of the checkbox, int_var is the name of the checkbox?, and int_var.get returns 0 or 1 depending on if it's checked
@@ -75,13 +87,39 @@ def get_checkbox_state():
                 report.writelines(text_lst[x])
     # do I need this?
     report.close()
+    submit_popup()
 
-def clear_checkboxes():
-    for checkbox in checkbox_lst:
-        checkbox.destroy()
-    checkbox_lst.clear()
-    text_lst.clear()
-    var_lst.clear()
+def submit_popup():
+    popup = tk.Tk()
+    popup.wm_title("Report generated!")
+    windowWidth = popup.winfo_reqwidth()
+    windowHeight = popup.winfo_reqheight()
+    positionRight = int(popup.winfo_screenwidth()/2 - windowWidth/2)
+    positionDown = int(popup.winfo_screenheight()/3 - windowHeight/2)
+    popup.geometry("+{}+{}".format(positionRight, positionDown))
+    message = tk.Label(popup, text="The report has been generated alongside this program.")
+    message.grid(row=0, pady=10, padx=10)
+    okay_button = tk.Button(popup, text="Okay!", command = popup.destroy)
+    okay_button.grid(row=1, pady=10, padx=10)
+
+def help_popup():
+    popup = tk.Tk()
+    popup.wm_title("Help")
+    windowWidth = popup.winfo_reqwidth()
+    windowHeight = popup.winfo_reqheight()
+    positionRight = int(popup.winfo_screenwidth()/2 - windowWidth/2)
+    positionDown = int(popup.winfo_screenheight()/3 - windowHeight/2)
+    popup.geometry("+{}+{}".format(positionRight, positionDown))
+    heading = tk.Label(popup, text="Templates")
+    heading.grid(row=0, pady=5, padx=5)
+    message = tk.Label(popup, text="To create the templates, make a text file called content, and enter your templates." + "\n" + "Make sure each one is on a new line." + "\n" + "For available substitutions, see below.")
+    message.grid(row=0, pady=10, padx=10)
+    subs = tk.Label(popup, text="$name -> Whatever is entered into the name text field" + "\n" + "$pronoun -> The pronoun listed in the dropdown box (he/she/they)"  + "\n" + "$possessive_pronoun -> The possessive pronoun listed in the dropdown box (his/hers/theirs)")
+    subs.grid(row=1, pady=10)
+    example = tk.Label(popup, text="For example, if you had the template:" + "\n" + "$name plays well with $possessive_noun toys and $pronoun likes to play with $possessive_pronoun friends." + "\n" + "and you entered the name Miles, and the gender as he/him, it would become:" + "\n" + "Miles plays well with his toys and he likes to play with his friends.")
+    example.grid(row=2)
+    okay_button = tk.Button(popup, text="Okay!", command = popup.destroy)
+    okay_button.grid(row=3, pady=10, padx=10)
 
 # a list containing the name+pronoun swapped strings
 text_lst = []
@@ -127,7 +165,10 @@ button.grid(row=0, column=3, pady=2, padx=2, columnspan=2)
 button = tk.Button(top_frame, text="Clear", command=clear_checkboxes)
 button.grid(row=1, column=3, pady=2, padx=2, columnspan=2)
 
-button = tk.Button(bottom_frame, text="Save/Export", command=get_checkbox_state)
-button.grid()
+button = tk.Button(bottom_frame, text="Save/Export", command=write_to_file)
+button.grid(row=0, column=0)
+
+button = tk.Button(bottom_frame, text="Help", command=help_popup)
+button.grid(row=0, column=1)
 
 window.mainloop()
