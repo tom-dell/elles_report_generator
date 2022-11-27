@@ -3,10 +3,16 @@ from cgitb import text
 from curses.textpad import Textbox
 from textwrap import wrap
 import tkinter as tk
+from tkinter import ttk
 import os
 
 window = tk.Tk()
-window.geometry('600x700')
+# Import the tcl file
+window.tk.call('source', 'forest-dark.tcl')
+# Set the theme with the theme_use method
+ttk.Style().theme_use('forest-dark')
+
+window.geometry('700x550')
 window.wm_title("Ellesha Murphey's Report Generator")
 windowWidth = window.winfo_reqwidth()
 windowHeight = window.winfo_reqheight()
@@ -21,7 +27,7 @@ right_frame.grid(column=1, row=0, pady=2, padx=3)
 right_frame_canvas = tk.Canvas(right_frame, width=500, height=500, highlightbackground="black", highlightthickness=2, scrollregion=(0,0,500,500))
 right_frame_canvas.grid(sticky=tk.N)
 
-ignored = ['report_generator.py', '.git', '.DS_Store']
+ignored = ['report_generator.py', '.gitignore', '.DS_Store', 'forest-dark', 'forest-dark.tcl']
 files = [x for x in os.listdir('.') if x not in ignored]
 
 
@@ -60,7 +66,8 @@ def make_checkboxes():
     i = 2
     for index, item in enumerate(descriptors_lst):
         var_lst.append(tk.IntVar(value=0))
-        checkbox = tk.Checkbutton(right_frame_canvas, variable=var_lst[index], text=item, wraplength=500)
+        checkbox = ttk.Checkbutton(right_frame_canvas, style='ToggleButton', variable=var_lst[index], text=item)#, wraplength=500)
+        #togglebutton = ttk.Checkbutton(root, text='Toggle button', style='ToggleButton', variable=var)
         checkbox.grid(row=i, column=0, pady=2, padx=2, columnspan=4, sticky= 'w')
         checkbox_lst.append(checkbox)
         i += 1
@@ -145,26 +152,28 @@ var_lst = []
 # a list of all the checkboxes
 checkbox_lst = []
 
-descriptors_file_holder = tk.StringVar(left_frame)
+descriptors_file_holder = tk.StringVar()
 # the actual drop down menu
-descriptors_file_dropdown = tk.OptionMenu(left_frame, descriptors_file_holder, *files)
+#descriptors_file_dropdown = ttk.Combobox(left_frame, descriptors_file_holder)
+descriptors_file_dropdown = ttk.Combobox(left_frame, textvariable=descriptors_file_holder)
+descriptors_file_dropdown['values'] = files
 descriptors_file_dropdown.grid(row=0, column=0, pady=2, padx=2)
 
 # Below is the structure of the window #
 # The enter their name label
-name_label = tk.Label(left_frame, text="Enter their name")
+name_label = ttk.Label(left_frame, text="Enter their name")
 name_label.grid(row=1, column=0, pady=2, padx=2)
 
 # the name entry field
-name_entry = tk.Entry(left_frame)
+name_entry = ttk.Entry(left_frame)
 name_entry.grid(row=2, column=0, pady=2, padx=2)
 
 # a spacer to seperate the name section from the pronoun section
-spacer1 = tk.Label(left_frame, text="")
+spacer1 = ttk.Label(left_frame, text="")
 spacer1.grid(row=3, column=0, pady=10, padx=2, rowspan=2)
 
 # gender label
-gender_label = tk.Label(left_frame, text="Select their prefered pronouns")
+gender_label = ttk.Label(left_frame, text="Select their prefered pronouns")
 gender_label.grid(row=4, column=0, pady=2, padx=2)
 
 # a list of the genders
@@ -173,27 +182,28 @@ genders_lst = ("Male (he/his)", "Female (she/hers)", "Genderless (they/theirs)")
 # a variable to hold the value selected from the dropdown box
 drop_down_holder = tk.StringVar(left_frame)
 # the actual drop down menu
-gender_dropdown = tk.OptionMenu(left_frame, drop_down_holder, *genders_lst)
+gender_dropdown = ttk.Combobox(left_frame, textvariable=drop_down_holder)
+gender_dropdown['values'] = genders_lst
 gender_dropdown.grid(row=5, column=0, pady=2, padx=2)
 
 # a spacer to seperate the gender stuff from the submit button
-spacer2 = tk.Label(left_frame, text="")
+spacer2 = ttk.Label(left_frame, text="")
 spacer2.grid(row=6, column=0, pady=10, padx=2, rowspan=2)
 
 # the submit button, which runs the descriptions function
-button = tk.Button(left_frame, text="Generate", command=generate_descriptors)
+button = ttk.Button(left_frame, text="Generate", command=generate_descriptors)
 button.grid(row=7, column=0, pady=2, padx=2, columnspan=2)
 
 # the clear button, which runs the clear_checkboxes function
-button = tk.Button(left_frame, text="Clear", command=clear_checkboxes)
+button = ttk.Button(left_frame, text="Clear", command=clear_checkboxes)
 button.grid(row=8, column=0, pady=2, padx=2, columnspan=2)
 
 # the save/export button, this will write the checked descriptors to a text file
-button = tk.Button(left_frame, text="Save/Export", command=write_to_file)
+button = ttk.Button(left_frame, text="Save/Export", command=write_to_file)
 button.grid(row=9, column=0)
 
 # this button opens the help section
-button = tk.Button(left_frame, text="Help", command=help_popup)
+button = ttk.Button(left_frame, text="Help", command=help_popup)
 button.grid(row=10, column=0)
 
 window.mainloop()
