@@ -51,12 +51,13 @@ checkbox_frame.bind(
     )
 )
 
-#right_canvas.bind_all("<MouseWheel>", lambda event: right_canvas.yview_scroll(-1*(event.delta//120), "units"))
+
 
 
 #the lists, i want to somehow remove these global lists
 checkbutton_lst = []
 genders_lst = ["Male", "Female", "Gender-neutral"]
+var_lst = []
 
 #returns a list of headers in the descriptors tab
 def get_headers():
@@ -99,10 +100,13 @@ def generate_descriptors():
 
 def make_checkboxes():
     descriptors_lst = generate_descriptors()
-    for item in descriptors_lst:
-        checkbutton = tk.Checkbutton(checkbox_frame, text=str(item), wraplength=350)#, style="ToggleButton", width=40)
+    i = 2
+    for index, item in enumerate(descriptors_lst):
+        var_lst.append(tk.IntVar(value=0))
+        checkbutton = tk.Checkbutton(checkbox_frame, text=str(item), wraplength=350, variable=var_lst[index])
         checkbutton.pack(padx=10, pady=10, anchor='w')
         checkbutton_lst.append(checkbutton)
+        i += 1
     descriptors_lst.clear()
 
 def clear_checkboxes():
@@ -112,16 +116,20 @@ def clear_checkboxes():
 
 def write_to_file():
     name = get_name()
+    descriptors_lst = generate_descriptors()
     selected_descriptors = []
-    for checkbox in checkbutton_lst:
-        if checkbox.instate(['selected']):
-            selected_descriptors.append(checkbox.cget("text"))
+    #for checkbox in checkbutton_lst:
+    for x, int_var in enumerate(var_lst):
+        #print(type(x))
+        if int_var.get():
+            selected_descriptors.append(descriptors_lst[x])
     with open("%s_report.txt" %(name), "w+") as report:
         for selected_descriptor in selected_descriptors:
             report.writelines(selected_descriptor + "\n")
     submit_popup()
 
 def submit_popup():
+    clear_checkboxes()
     popup = tk.Tk()
     popup.wm_title("Report generated!")
     windowWidth = popup.winfo_reqwidth()
