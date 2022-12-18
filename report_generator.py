@@ -61,7 +61,7 @@ var_lst = []
 
 #returns a list of headers in the descriptors tab
 def get_headers():
-    excel = pd.read_excel('report_generator.xlsx', sheet_name='descriptors')
+    excel = pd.read_excel('descriptors.xlsx', sheet_name='descriptors')
     headers = [col for col in excel if not col.startswith('Unnamed:')]
     return headers
 
