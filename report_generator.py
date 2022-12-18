@@ -1,5 +1,4 @@
 from cProfile import label
-from cgitb import text
 from curses.textpad import Textbox
 from textwrap import wrap
 import tkinter as tk
@@ -7,12 +6,13 @@ from tkinter import ttk
 import pandas as pd
 import webbrowser
 
+#create the window
 window = tk.Tk()
 # Import the tcl file
 window.tk.call('source', 'forest-dark.tcl')
 # Set the theme with the theme_use method
 ttk.Style().theme_use('forest-dark')
-
+#set window size and position
 window.geometry('700x550')
 window.wm_title("Ellesha Murphey's Report Generator")
 windowWidth = window.winfo_reqwidth()
@@ -20,80 +20,105 @@ windowHeight = window.winfo_reqheight()
 positionRight = int(window.winfo_screenwidth()/2 - windowWidth/2)
 positionDown = int(window.winfo_screenheight()/3 - windowHeight/2)
 window.geometry("+{}+{}".format(positionRight, positionDown))
-
+#creating the two side by side frames
 left_frame = tk.Frame(window)
 left_frame.grid(column=0, row=0, sticky=tk.N)
 right_frame = tk.Frame(window)
 right_frame.grid(column=1, row=0, sticky=tk.N)
-#right_frame_canvas = tk.Canvas(right_frame, width=500, height=500, highlightbackground="black", highlightthickness=2, scrollregion=(0,0,500,500))
-#right_frame_canvas.grid(sticky=tk.N)
+
+# Create a canvas to hold the scrollbar and the frame with the scrollable content
+right_canvas = tk.Canvas(right_frame, width=400, height=500, highlightbackground="black", highlightthickness=2)
+right_canvas.pack()
+
+# Create a vertical scrollbar and place it on the canvas
+scrollbar = ttk.Scrollbar(right_frame, orient="vertical", command=right_canvas.yview)
+scrollbar.pack(side="right", fill="y")
+
+# Configure the canvas to use the scrollbar
+right_canvas.configure(yscrollcommand=scrollbar.set)
+
+# Define a frame to hold the checkboxes
+checkbox_frame = tk.Frame(right_canvas)
+
+# Place the frame inside the canvas
+right_canvas.create_window((0, 0), window=checkbox_frame, anchor="nw")
+
+# Bind the scroll event of the canvas to the function that will scroll the frame
+checkbox_frame.bind(
+    "<Configure>",
+    lambda e: right_canvas.configure(
+        scrollregion=right_canvas.bbox("all")
+    )
+)
+
+#right_canvas.bind_all("<MouseWheel>", lambda event: right_canvas.yview_scroll(-1*(event.delta//120), "units"))
 
 
+#the lists, i want to somehow remove these global lists
+checkbutton_lst = []
+genders_lst = ["Male", "Female", "Gender-neutral"]
+
+#returns a list of headers in the descriptors tab
 def get_headers():
     excel = pd.read_excel('report_generator.xlsx', sheet_name='descriptors')
-    headers = []
-    for column in excel:
-        headers.append(column)
+    headers = [col for col in excel if not col.startswith('Unnamed:')]
     return headers
 
-def get_col_values():
+def get_descriptors():
     excel = pd.read_excel('report_generator.xlsx', sheet_name='descriptors')
-    values = excel[descriptors_holder.get()].values.tolist()
+    values = excel[descriptors_holder.get()]
+    values = values.dropna()
+    values.to_list()
     return values
+
+def get_name():
+    name = name_entry.get()
+    return str(name)
+
+def get_pronouns():
+    chosen_gender = drop_down_holder.get()
+    if chosen_gender == "Male":
+        pronouns = ["he", "his"]
+    if chosen_gender == "Female":
+        pronouns = ["she", "her"]
+    if chosen_gender == "Gender-neutral":
+        pronouns = ["they", "their"]
+    return pronouns
 
 def generate_descriptors():
     clear_checkboxes()
-    excel = pd.read_excel('report_generator.xlsx', sheet_name='descriptors').dropna()
-    values = excel[descriptors_holder.get()].values.tolist()   
-    chosen_gender = drop_down_holder.get()
-    # 3 if statements which will swap the name and pronouns based on gender picked
-    if chosen_gender == "Male (he/his)":
-        for line in values:
-            # swap the name, and pronouns
-            male_descriptors = line.replace("$name", str(name_entry.get())).replace("$pronoun", "he").replace("$possessive_pronoun", "his")
-            male_descriptors = str(male_descriptors)
-            # append each line to the list
-            descriptors_lst.append(male_descriptors)
-    make_checkboxes()
-
-    if chosen_gender == "Female (she/hers)":
-        for line in values:
-            female_descriptors = line.replace("$name", str(name_entry.get())).replace("$pronoun", "she").replace("$possessive_pronoun", "hers")
-            descriptors_lst.append(female_descriptors)
-    make_checkboxes()
-
-    if chosen_gender == "Genderless (they/theirs)":
-        for line in values:
-            genderless_descriptors = line.replace("$name", str(name_entry.get())).replace("$pronoun", "they").replace("$possessive_pronoun", "theirs")
-            descriptors_lst.append(genderless_descriptors)
-    make_checkboxes()
+    descriptors = get_descriptors()
+    name = get_name()
+    pronouns = get_pronouns()
+    
+    descriptors_lst = []
+    for line in descriptors:
+        swapped = line.replace("$name", name).replace("$pronoun", pronouns[0]).replace("$possessive_pronoun", pronouns[1])
+        descriptors_lst.append(swapped)
+    return descriptors_lst
 
 def make_checkboxes():
-    i = 2
-    for index, item in enumerate(descriptors_lst):
-        var_lst.append(tk.IntVar(value=0))
-        checkbox = ttk.Checkbutton(right_frame, style='ToggleButton', variable=var_lst[index], text=item)#, wraplength=500)
-        #togglebutton = ttk.Checkbutton(root, text='Toggle button', style='ToggleButton', variable=var)
-        checkbox.grid(row=i, column=0, pady=2, padx=2, columnspan=4, sticky= 'w')
-        checkbox_lst.append(checkbox)
-        i += 1
+    descriptors_lst = generate_descriptors()
+    for item in descriptors_lst:
+        checkbutton = tk.Checkbutton(checkbox_frame, text=str(item), wraplength=350)#, style="ToggleButton", width=40)
+        checkbutton.pack(padx=10, pady=10, anchor='w')
+        checkbutton_lst.append(checkbutton)
+    descriptors_lst.clear()
 
 def clear_checkboxes():
-    for checkbox in checkbox_lst:
+    for checkbox in checkbutton_lst:
         checkbox.destroy()
-    checkbox_lst.clear()
-    descriptors_lst.clear()
-    var_lst.clear()
+    checkbutton_lst.clear()
 
 def write_to_file():
-    # create + open a txt file
-    with open(str(name_entry.get() + "_report.txt"), "w+") as report:
-        # x is the number of the checkbox, int_var is the name of the checkbox?, and int_var.get returns 0 or 1 depending on if it's checked
-        for x, int_var in enumerate(var_lst):
-            # if int_var is true
-            if int_var.get():
-                # then write the the corresponding item in the text_lst list to the txt file
-                report.writelines(descriptors_lst[x])
+    name = get_name()
+    selected_descriptors = []
+    for checkbox in checkbutton_lst:
+        if checkbox.instate(['selected']):
+            selected_descriptors.append(checkbox.cget("text"))
+    with open("%s_report.txt" %(name), "w+") as report:
+        for selected_descriptor in selected_descriptors:
+            report.writelines(selected_descriptor + "\n")
     submit_popup()
 
 def submit_popup():
@@ -109,26 +134,18 @@ def submit_popup():
     okay_button = tk.Button(popup, text="Okay!", command = popup.destroy)
     okay_button.grid(row=1, pady=10, padx=10)
 
-
-# a list containing the name+pronoun swapped strings
-descriptors_lst = []
-# a number assigned to each of the lines in the text file
-var_lst = []
-# a list of all the checkboxes
-checkbox_lst = []
+def open_help():
+    help_url = "https://github.com/tom-dell/elles_report_generator/blob/master/README.md"
+    webbrowser.open(help_url)
 
 descriptors_label = ttk.Label(left_frame, text="Chose the descriptors topic")
 descriptors_label.grid(row=0, column=0, pady=2, padx=2, columnspan=2)
 
 descriptors_holder = tk.StringVar()
-# the actual drop down menu
-#descriptors_file_dropdown = ttk.Combobox(left_frame, descriptors_file_holder)
 descriptors_dropdown = ttk.Combobox(left_frame, textvariable=descriptors_holder)
 descriptors_dropdown['values'] = get_headers()
 descriptors_dropdown.grid(row=1, column=0, pady=2, padx=2, columnspan=2)
 
-# Below is the structure of the window #
-# The enter their name label
 name_label = ttk.Label(left_frame, text="Enter their name")
 name_label.grid(row=3, column=0, pady=2, padx=2, columnspan=2)
 
@@ -140,9 +157,6 @@ name_entry.grid(row=4, column=0, pady=2, padx=2, columnspan=2)
 gender_label = ttk.Label(left_frame, text="Select their prefered pronouns")
 gender_label.grid(row=6, column=0, pady=2, padx=2, columnspan=2)
 
-# a list of the genders
-genders_lst = ("Male (he/his)", "Female (she/hers)", "Genderless (they/theirs)")
-#drop_down_holder = StringVar(value="Select an option")
 # a variable to hold the value selected from the dropdown box
 drop_down_holder = tk.StringVar(left_frame)
 # the actual drop down menu
@@ -154,7 +168,7 @@ spacer1 = ttk.Label(left_frame, text="")
 spacer1.grid(row=8, column=0, pady=10, padx=2, columnspan=2)
 
 # the submit button, which runs the descriptions function
-button = ttk.Button(left_frame, text="Generate", command=generate_descriptors)
+button = ttk.Button(left_frame, text="Generate", command=make_checkboxes)
 button.grid(row=9, column=0, pady=2, padx=2)
 
 # the clear button, which runs the clear_checkboxes function
@@ -166,9 +180,10 @@ button = ttk.Button(left_frame, text="Save/Export", command=write_to_file)
 button.grid(row=10, column=0)
 
 # this button opens the help section
-help_url = "https://github.com/tom-dell/elles_report_generator/blob/master/README.md"
-button = ttk.Button(left_frame, text="Help")#, command=webbrowser.open(help_url))
+
+button = ttk.Button(left_frame, text="Help", command=open_help)
 button.grid(row=10, column=1)
 
-
+right_canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
 window.mainloop()
